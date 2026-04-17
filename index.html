@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title> المكتبة</title>
+    <title>مكتبة الحسين</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#224abe">
@@ -262,7 +262,7 @@
 
     <script>
         // ضع هنا رابط Google Apps Script Web App بعد النشر
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnd3lFLRSbhK0JiRmhmzFo8X6qxLU1q_j-SLyb2RPkyOT3wsrVKNa2qGIrm4jXNwiV/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWsjygsyxGUSyp6V4YTA8UhbFrwNcXvdqoaU9S9IO_QmKKOg1X5KgKTNVdXJY6P25x/exec";
 
         const dataStore = {
             "books": [
@@ -7232,8 +7232,6 @@
                 }
             ]
         };
-
-
         let view = 'borrow';
         let mode = 'qr';
         let studentQR = null;
@@ -7509,44 +7507,28 @@
         }
 
         async function syncData() {
-            let items = getPendingItems();
+            const items = getPendingItems();
 
             if (items.length === 0) {
                 alert("لا يوجد بيانات");
                 return;
             }
 
-            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PUT_YOUR")) {
-                alert("ضع رابط Apps Script أولاً");
-                return;
-            }
-
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ items: items })
+                const formData = new FormData();
+                formData.append("data", JSON.stringify(items));
+
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: formData
                 });
 
-                const data = await response.json();
+                localStorage.removeItem('library_pending_items');
+                updateCounter();
 
-                if ("serviceWorker" in navigator) {
-                    navigator.serviceWorker.register("sw.js")
-                        .then(() => console.log("SW Registered"))
-                        .catch(err => console.log("SW Failed", err));
-                }
+                alert("تم إرسال البيانات للمزامنة ✅");
 
-
-                if (data.status === 'success') {
-                    localStorage.removeItem('library_pending_items');
-                    updateCounter();
-                    alert("تمت المزامنة بنجاح ✅");
-
-                } else {
-                    alert(data.message || "فشلت المزامنة");
-                }
             } catch (e) {
                 console.error(e);
                 alert("فشل الاتصال ❌");
